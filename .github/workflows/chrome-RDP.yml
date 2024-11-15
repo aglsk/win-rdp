@@ -7,18 +7,28 @@ on:
         description: 'Enter CRD code'
         required: true
       pincode:
-        description: 'Six digit Pin'
+        description: 'Six digit PIN for Chrome Remote Desktop'
         required: true
-  
+
 jobs:
-  build:
-    runs-on: Windows-latest
+  setup-crd:
+    runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Initializing Setup
+    - name: Checkout the repository
+      uses: actions/checkout@v2
+
+    - name: Initialize Setup
+      shell: pwsh
       run: ./setup.ps1
-    - name: Starting CRD
-      run: ${{ github.event.inputs.authcode }} -pin=${{ github.event.inputs.pincode }}
+
+    - name: Install Chrome Remote Desktop Host
+      shell: pwsh
+      run: |
+        $authCode = "${{ github.event.inputs.authcode }}"
+        $pinCode = "${{ github.event.inputs.pincode }}"
+        & "C:\Program Files (x86)\Google\Chrome Remote Desktop\remoting_start_host.exe" --code="$authCode" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name="GitHubRunner" --pin="$pinCode"
+
     - name: Keep Alive
+      shell: pwsh
       run: ./timeout.ps1
